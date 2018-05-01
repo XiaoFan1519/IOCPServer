@@ -14,14 +14,14 @@ namespace Server
 
         private CountdownEvent closeEvent = new CountdownEvent(1);
 
-        private List<IHandle> pipeline = new List<IHandle>();
+        private IHandle handle;
 
         public Channel(Socket socket)
         {
             this.socket = socket;
         }
 
-        public List<IHandle> Pipeline => pipeline;
+        public IHandle Handle;
 
         /// <summary>
         /// 关闭Channel
@@ -40,6 +40,9 @@ namespace Server
         {
             SocketAsyncEventArgs receiveEventArg = new SocketAsyncEventArgs();
             receiveEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);
+            // 分配buffer
+            byte[] buffer = new byte[4096];
+            receiveEventArg.SetBuffer(buffer, 0, 4096);
             socket.ReceiveAsync(receiveEventArg);
             closeEvent.Wait();
         }
@@ -69,11 +72,22 @@ namespace Server
         //
         private void ProcessReceive(SocketAsyncEventArgs e)
         {
-            // 判断是否停止
+            // 判断是否需要继续处理
             if (closeEvent.IsSet)
             {
                 return;
             }
+
+            NotifyHandle(e);
+        }
+
+        /// <summary>
+        /// 通知处理程序
+        /// </summary>
+        /// <param name="e"></param>
+        private void NotifyHandle(SocketAsyncEventArgs e)
+        {
+            handle.ChannelRead(this, socket);
         }
     }
 }

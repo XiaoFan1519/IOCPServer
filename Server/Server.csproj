@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ByteBuffer.cs" />
     <Compile Include="Channel.cs" />
     <Compile Include="IHandle.cs" />
     <Compile Include="Program.cs" />

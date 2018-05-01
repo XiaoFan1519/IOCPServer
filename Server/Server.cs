@@ -80,7 +80,6 @@ namespace Server
             {
                 acceptEventArg = new SocketAsyncEventArgs();
                 acceptEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(AcceptEventArg_Completed);
-                acceptEventArg.UserToken = null;
             }
             else
             {
