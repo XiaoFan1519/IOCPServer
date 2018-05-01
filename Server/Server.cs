@@ -14,10 +14,6 @@ namespace Server
     {
         private Socket listenSocket;            // the socket used to listen for incoming connection requests
 
-        private SocketAsyncEventArgsPool socketAsyncEventArgsPool;
-
-        private BufferManager bufferManager;
-
         private Semaphore maxNumberAcceptedClients;
 
         public delegate void InitChannelDelegate(Channel channel);
@@ -28,13 +24,8 @@ namespace Server
         //
         // <param name="numConnections">the maximum number of connections the sample is designed to handle simultaneously</param>
         // <param name="receiveBufferSize">buffer size to use for each socket I/O operation</param>
-        public Server(int numConnections, int receiveBufferSize)
-        {
-            // allocate buffers such that the maximum number of sockets can have one outstanding read and 
-            //write posted to the socket simultaneously  
-            bufferManager = new BufferManager(receiveBufferSize * numConnections, receiveBufferSize);
-
-            socketAsyncEventArgsPool = new SocketAsyncEventArgsPool(numConnections);
+        public Server(int numConnections)
+        {            
             maxNumberAcceptedClients = new Semaphore(numConnections, numConnections);
         }
 
@@ -87,7 +78,7 @@ namespace Server
         {
             if (acceptEventArg == null)
             {
-                acceptEventArg = socketAsyncEventArgsPool.Pop();
+                acceptEventArg = new SocketAsyncEventArgs();
                 acceptEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(AcceptEventArg_Completed);
                 acceptEventArg.UserToken = null;
             }
@@ -112,50 +103,17 @@ namespace Server
             ProcessAccept(e);
         }
 
-        private void IO_Completed(object sender, SocketAsyncEventArgs e)
-        {
-            // determine which type of operation just completed and call the associated handler
-            switch (e.LastOperation)
-            {
-                case SocketAsyncOperation.Receive:
-                    ProcessReceive(e);
-                    break;
-                case SocketAsyncOperation.Send:
-                    break;
-                default:
-                    throw new ArgumentException("The last operation completed on the socket was not a receive or send");
-            }
-
-        }
-
         private void ProcessAccept(SocketAsyncEventArgs e)
         {
-            SocketAsyncEventArgs readEventArgs = new SocketAsyncEventArgs
-            {
-                UserToken = e.AcceptSocket
-            };
-            readEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);
-            readEventArgs.SetBuffer(new byte[255], 0, 255);
-            // As soon as the client is connected, post a receive to the connection
-            bool willRaiseEvent = e.AcceptSocket.ReceiveAsync(readEventArgs);
-            if (!willRaiseEvent)
-            {
-                ProcessReceive(readEventArgs);
-            }
-
-            // Accept the next connection request
+            new Thread(CreateChannel).Start(e.AcceptSocket);
             StartAccept(e);
         }
 
-        private void ProcessReceive(SocketAsyncEventArgs e)
+        private void CreateChannel(object param)
         {
-            Console.WriteLine(Encoding.ASCII.GetString(e.Buffer, e.Offset, e.BytesTransferred));
-            Socket socket = e.UserToken as Socket;
-            bool willRaiseEvent = socket.ReceiveAsync(e);
-            if (!willRaiseEvent)
-            {
-                ProcessAccept(e);
-            }
+            Socket socket = param as Socket;
+            Channel channel = new Channel(socket);
+            channel.Wait();
         }
     }
 }
