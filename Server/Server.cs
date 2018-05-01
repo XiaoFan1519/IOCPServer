@@ -25,7 +25,7 @@ namespace Server
         // <param name="numConnections">the maximum number of connections the sample is designed to handle simultaneously</param>
         // <param name="receiveBufferSize">buffer size to use for each socket I/O operation</param>
         public Server(int numConnections)
-        {            
+        {
             maxNumberAcceptedClients = new Semaphore(numConnections, numConnections);
         }
 
