@@ -43,5 +43,17 @@ namespace Server
             readerIndex = writerIndex = 0;
             return this;
         }
+
+        /// <summary>
+        /// 将字节数组写入ByteBuffer中
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public ByteBuffer WriteBytes(byte[] bytes)
+        {
+            Buffer.BlockCopy(bytes, 0, buffer, writerIndex, bytes.Length);
+            return this;
+        }
+
     }
 }
