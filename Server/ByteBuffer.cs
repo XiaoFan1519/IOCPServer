@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -52,6 +53,20 @@ namespace Server
         public ByteBuffer WriteBytes(byte[] bytes)
         {
             Buffer.BlockCopy(bytes, 0, buffer, writerIndex, bytes.Length);
+            writerIndex += bytes.Length;
+            return this;
+        }
+
+        /// <summary>
+        /// 将short按照网络字节序写入到ByteBuffer中
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public ByteBuffer WriteShort(short value)
+        {
+            value = IPAddress.HostToNetworkOrder(value);
+            byte[] bytes = BitConverter.GetBytes(value);
+            WriteBytes(bytes);
             return this;
         }
 
