@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-    class ByteBuffer
+    public class ByteBuffer
     {
         /// <summary>
         /// 容量
