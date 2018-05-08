@@ -21,6 +21,11 @@ namespace Server
         private int writerIndex;
 
         /// <summary>
+        /// 当前容量
+        /// </summary>
+        public int Capacity => capacity;
+
+        /// <summary>
         /// 读索引
         /// </summary>
         public int ReaderIndex => readerIndex;
@@ -135,7 +140,7 @@ namespace Server
         /// <param name="length"></param>
         /// <param name="capacity"></param>
         /// <returns></returns>
-        public static bool IsOutOfBounds(int index, int length, int capacity)
+        private static bool IsOutOfBounds(int index, int length, int capacity)
         {
             return (index | length | (index + length) | (capacity - (index + length))) < 0;
         }
