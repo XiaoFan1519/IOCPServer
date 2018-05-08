@@ -151,6 +151,7 @@ namespace Server
         /// <param name="index">起始位置</param>
         /// <param name="count">获取数量</param>
         /// <returns></returns>
+        /// <exception cref="ArgumentException">指定的参数越界</exception>
         public byte[] GetBytes(int index, int count)
         {
             // 越界检测
@@ -161,6 +162,22 @@ namespace Server
 
             byte[] buff = new byte[count];
             Buffer.BlockCopy(buffer, index, buff, 0, count);
+            return buff;
+        }
+
+        /// <summary>
+        /// 从缓存中读取一个Short
+        /// </summary>
+        /// <returns></returns>
+        public byte[] ReadBytes(int count)
+        {
+            if (ReadableBytes() < count)
+            {
+                throw new IndexOutOfRangeException(string.Format("Read Count:{0}, But ReadableBytes:{1}", count, ReadableBytes()));
+            }
+
+            byte[] buff = GetBytes(readerIndex, count);
+            writerIndex += count;
             return buff;
         }
     }

@@ -57,6 +57,7 @@ namespace Server.Tests
             Assert.AreEqual(4, byteBuffer.WritableBytes());
             byteBuffer.WriteInt(1);
             Assert.AreEqual(0, byteBuffer.WritableBytes());
+            Assert.AreEqual(4, byteBuffer.WriterIndex);
         }
 
         [TestMethod()]
@@ -66,15 +67,17 @@ namespace Server.Tests
             byteBuffer.WriteShort(1);
             byte[] buff = byteBuffer.GetBytes(0, 2);
             Assert.AreEqual(1, buff[1]);
+            Assert.AreEqual(2, byteBuffer.WriterIndex);
         }
 
         [TestMethod()]
         public void WriteIntTest()
         {
             ByteBuffer byteBuffer = new ByteBuffer(4);
-            byteBuffer.WriteShort(15);
+            byteBuffer.WriteInt(15);
             byte[] buff = byteBuffer.GetBytes(0, 4);
-            Assert.AreEqual(15, buff[1]);
+            Assert.AreEqual(15, buff[3]);
+            Assert.AreEqual(4, byteBuffer.WriterIndex);
         }
 
         [TestMethod()]
@@ -87,6 +90,19 @@ namespace Server.Tests
             Assert.AreEqual(255, buff[1]);
             Assert.AreEqual(255, buff[2]);
             Assert.AreEqual(255, buff[3]);
+            Assert.AreEqual(4, byteBuffer.WriterIndex);
+
+            // 越界
+            Assert.ThrowsException<ArgumentException>(() =>
+            {
+                byteBuffer.GetBytes(5, 4);
+            });
+        }
+
+        [TestMethod]
+        public void ReadBytesTest()
+        {
+
         }
     }
 }
