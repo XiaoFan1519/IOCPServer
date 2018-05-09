@@ -102,7 +102,27 @@ namespace Server.Tests
         [TestMethod]
         public void ReadBytesTest()
         {
+            ByteBuffer byteBuffer = new ByteBuffer(4);
+            Assert.ThrowsException<IndexOutOfRangeException>(() =>
+            {
+                byteBuffer.ReadBytes(5);
+            });
+            byteBuffer.WriteInt(2147483647);
+            byte[] buff = byteBuffer.ReadBytes(4);
+            Assert.AreEqual(4, byteBuffer.ReaderIndex);
+            Assert.AreEqual(127, buff[0]);
+            Assert.AreEqual(255, buff[1]);
+            Assert.AreEqual(255, buff[2]);
+            Assert.AreEqual(255, buff[3]);
+            Assert.AreEqual(4, buff.Length);
+        }
 
+        [TestMethod]
+        public void ReadShortTest()
+        {
+            ByteBuffer byteBuffer = new ByteBuffer(2);
+            byteBuffer.WriteShort(127);
+            Assert.AreEqual(127, byteBuffer.ReadShort());
         }
     }
 }
