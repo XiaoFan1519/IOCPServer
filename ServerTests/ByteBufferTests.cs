@@ -124,5 +124,13 @@ namespace Server.Tests
             byteBuffer.WriteShort(127);
             Assert.AreEqual(127, byteBuffer.ReadShort());
         }
+
+        [TestMethod]
+        public void ReadIntTest()
+        {
+            ByteBuffer byteBuffer = new ByteBuffer(4);
+            byteBuffer.WriteInt(2147483647);
+            Assert.AreEqual(2147483647, byteBuffer.ReadInt());
+        }
     }
 }

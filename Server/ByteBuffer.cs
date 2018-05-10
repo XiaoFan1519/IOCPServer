@@ -190,5 +190,18 @@ namespace Server
             byte[] buff = GetBytes(readerIndex, 2);
             return (short)(buff[0] << 8 | buff[1] & 0xFF);
         }
+
+        /// <summary>
+        /// 从缓存中读取一个Short
+        /// </summary>
+        /// <returns></returns>
+        public int ReadInt()
+        {
+            byte[] buff = GetBytes(readerIndex, 4);
+            return buff[0] << 24 | 
+                buff[1] << 16 |
+                buff[2] <<   8 |
+                buff[3];
+        }
     }
 }
