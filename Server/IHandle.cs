@@ -8,7 +8,7 @@ namespace Server
 {
     interface IHandle
     {
-        void ChannelRead(Channel channel, Object msg);
+        void ChannelRead(Channel channel, ByteBuffer msg);
 
         void ExceptionCaught(Channel channel, Exception cause);
     }

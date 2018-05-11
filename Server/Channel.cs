@@ -10,18 +10,33 @@ namespace Server
 {
     class Channel
     {
+        /// <summary>
+        /// 本次连接的socket
+        /// </summary>
         private Socket socket;
 
+        /// <summary>
+        /// 用来控制退出
+        /// </summary>
         private CountdownEvent closeEvent = new CountdownEvent(1);
 
+        /// <summary>
+        /// 用来存储接收的数据
+        /// </summary>
+        private ByteBuffer buffer;
+
+        /// <summary>
+        /// 业务处理
+        /// </summary>
         private IHandle handle;
 
         public Channel(Socket socket)
         {
             this.socket = socket;
+            buffer = new ByteBuffer();
         }
 
-        public IHandle Handle;
+        public IHandle Handle { get => handle; set => handle = value; }
 
         /// <summary>
         /// 关闭Channel
@@ -87,7 +102,11 @@ namespace Server
         /// <param name="e"></param>
         private void NotifyHandle(SocketAsyncEventArgs e)
         {
-            handle.ChannelRead(this, socket);
+            if (null != handle)
+            {
+                buffer.WriteBytes(e.Buffer, e.BytesTransferred);
+                handle.ChannelRead(this, buffer);
+            }
         }
     }
 }

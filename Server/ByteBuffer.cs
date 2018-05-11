@@ -95,16 +95,27 @@ namespace Server
         }
 
         /// <summary>
+        /// 将指定数量的字节数组写入ByteBuffer中
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public ByteBuffer WriteBytes(byte[] bytes, int count)
+        {
+            EnsureWritable(count);
+            Buffer.BlockCopy(bytes, 0, buffer, writerIndex, count);
+            writerIndex += bytes.Length;
+            return this;
+        }
+
+        /// <summary>
         /// 将字节数组写入ByteBuffer中
         /// </summary>
         /// <param name="bytes"></param>
         /// <returns></returns>
         public ByteBuffer WriteBytes(byte[] bytes)
         {
-            EnsureWritable(bytes.Length);
-            Buffer.BlockCopy(bytes, 0, buffer, writerIndex, bytes.Length);
-            writerIndex += bytes.Length;
-            return this;
+            return WriteBytes(bytes, bytes.Length);
         }
 
         /// <summary>
