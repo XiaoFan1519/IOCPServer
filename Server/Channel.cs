@@ -58,7 +58,13 @@ namespace Server
             // 分配buffer
             byte[] buffer = new byte[4096];
             receiveEventArg.SetBuffer(buffer, 0, 4096);
-            socket.ReceiveAsync(receiveEventArg);
+            new Thread(() =>{
+                bool willRaiseEvent = socket.ReceiveAsync(receiveEventArg);
+                if (!willRaiseEvent)
+                {
+                    ProcessReceive(receiveEventArg);
+                }
+            }).Start();
             closeEvent.Wait();
         }
 
@@ -68,17 +74,7 @@ namespace Server
         void IO_Completed(object sender, SocketAsyncEventArgs e)
         {
             // determine which type of operation just completed and call the associated handler
-            switch (e.LastOperation)
-            {
-                case SocketAsyncOperation.Receive:
-                    ProcessReceive(e);
-                    break;
-                case SocketAsyncOperation.Send:
-                    // ProcessSend(e);
-                    break;
-                default:
-                    throw new ArgumentException("The last operation completed on the socket was not a receive or send");
-            }
+            ProcessReceive(e);
         }
 
         // This method is invoked when an asynchronous receive operation completes. 
@@ -107,6 +103,11 @@ namespace Server
                 buffer.WriteBytes(e.Buffer, e.BytesTransferred);
                 handle.ChannelRead(this, buffer);
             }
+        }
+
+        public void Send()
+        {
+
         }
     }
 }
