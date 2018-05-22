@@ -8,8 +8,6 @@ namespace Server
 {
     interface IHandle
     {
-        void ChannelRead(Channel channel, ByteBuffer msg);
-
-        void ExceptionCaught(Channel channel, Exception cause);
+        void Receive(UserToken token, ByteBuffer msg);
     }
 }
