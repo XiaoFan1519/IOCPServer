@@ -63,7 +63,7 @@ namespace Server
                 //Pre-allocate a set of reusable SocketAsyncEventArgs
                 readWriteEventArg = new SocketAsyncEventArgs();
                 readWriteEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);
-                readWriteEventArg.UserToken = new UserToken();
+                readWriteEventArg.UserToken = new UserToken(this);
 
                 // assign a byte buffer from the buffer pool to the SocketAsyncEventArg object
                 m_bufferManager.SetBuffer(readWriteEventArg);
@@ -197,18 +197,14 @@ namespace Server
                 Interlocked.Add(ref m_totalBytesRead, e.BytesTransferred);
                 Console.WriteLine("The server has read a total of {0} bytes", m_totalBytesRead);
 
-                //echo the data received back to the client
-                e.SetBuffer(e.Offset, e.BytesTransferred);
-                bool willRaiseEvent = token.Socket.SendAsync(e);
-                if (!willRaiseEvent)
-                {
-                    ProcessSend(e);
-                }
-
+                token.Receive(e.Buffer, e.Offset, e.BytesTransferred);
             }
-            else
+
+            // 继续接收
+            bool willRaiseEvent = token.Socket.ReceiveAsync(e);
+            if (!willRaiseEvent)
             {
-                CloseClientSocket(e);
+                ProcessReceive(e);
             }
         }
 

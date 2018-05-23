@@ -98,12 +98,13 @@ namespace Server
         /// 将指定数量的字节数组写入ByteBuffer中
         /// </summary>
         /// <param name="bytes"></param>
+        /// <param name="offset"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        public ByteBuffer WriteBytes(byte[] bytes, int count)
+        public ByteBuffer WriteBytes(byte[] bytes, int offset, int count)
         {
             EnsureWritable(count);
-            Buffer.BlockCopy(bytes, 0, buffer, writerIndex, count);
+            Buffer.BlockCopy(bytes, offset, buffer, writerIndex, count);
             writerIndex += bytes.Length;
             return this;
         }
@@ -115,7 +116,7 @@ namespace Server
         /// <returns></returns>
         public ByteBuffer WriteBytes(byte[] bytes)
         {
-            return WriteBytes(bytes, bytes.Length);
+            return WriteBytes(bytes, 0, bytes.Length);
         }
 
         /// <summary>
