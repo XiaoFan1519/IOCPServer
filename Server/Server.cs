@@ -23,6 +23,11 @@ namespace Server
         int m_numConnectedSockets;      // the total number of clients connected to the server 
         Semaphore m_maxNumberAcceptedClients;
 
+        /// <summary>
+        /// 发送队列管理
+        /// </summary>
+        SendManager m_sendManager;
+
         // Create an uninitialized server instance.  
         // To start the server listening for connection requests
         // call the Init method followed by Start method 
@@ -42,6 +47,7 @@ namespace Server
 
             m_readWritePool = new SocketAsyncEventArgsPool(numConnections);
             m_maxNumberAcceptedClients = new Semaphore(numConnections, numConnections);
+            m_sendManager = new SendManager(numConnections);
         }
 
         // Initializes the server by preallocating reusable buffers and 
@@ -174,11 +180,8 @@ namespace Server
                 case SocketAsyncOperation.Receive:
                     ProcessReceive(e);
                     break;
-                case SocketAsyncOperation.Send:
-                    ProcessSend(e);
-                    break;
                 default:
-                    throw new ArgumentException("The last operation completed on the socket was not a receive or send");
+                    throw new ArgumentException("The last operation completed on the socket was not a receive");
             }
 
         }
@@ -208,30 +211,6 @@ namespace Server
             }
         }
 
-        // This method is invoked when an asynchronous send operation completes.  
-        // The method issues another receive on the socket to read any additional 
-        // data sent from the client
-        //
-        // <param name="e"></param>
-        private void ProcessSend(SocketAsyncEventArgs e)
-        {
-            if (e.SocketError == SocketError.Success)
-            {
-                // done echoing data back to the client
-                UserToken token = e.UserToken as UserToken;
-                // read the next block of data send from the client
-                bool willRaiseEvent = token.Socket.ReceiveAsync(e);
-                if (!willRaiseEvent)
-                {
-                    ProcessReceive(e);
-                }
-            }
-            else
-            {
-                CloseClientSocket(e);
-            }
-        }
-
         private void CloseClientSocket(SocketAsyncEventArgs e)
         {
             UserToken token = e.UserToken as UserToken;
@@ -252,6 +231,16 @@ namespace Server
 
             // Free the SocketAsyncEventArg so they can be reused by another client
             m_readWritePool.Push(e);
+        }
+
+        /// <summary>
+        /// 添加到发送队列
+        /// </summary>
+        /// <param name="socket"></param>
+        /// <param name="buffer"></param>
+        public void Send(Socket socket, byte[] buffer)
+        {
+            m_sendManager.Send(socket, buffer);
         }
     }
 }

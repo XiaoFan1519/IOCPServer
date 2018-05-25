@@ -45,8 +45,10 @@
     <Compile Include="BufferManager.cs" />
     <Compile Include="ByteBuffer.cs" />
     <Compile Include="IHandle.cs" />
+    <Compile Include="Item.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SendManager.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="SocketAsyncEventArgsPool.cs" />
     <Compile Include="UserToken.cs" />
