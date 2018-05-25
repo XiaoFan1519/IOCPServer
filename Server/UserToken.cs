@@ -35,7 +35,7 @@ namespace Server
             do
             {
                 mutex.WaitOne();
-                handle.Receive(this, m_buffer);
+                handle?.Receive(this, m_buffer);
             } while (!close);
         }
 
