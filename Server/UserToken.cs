@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-    class UserToken
+    public class UserToken
     {
         public Socket Socket;
 
@@ -16,14 +16,20 @@ namespace Server
 
         private ByteBuffer m_buffer = new ByteBuffer();
 
-        private Mutex mutex = new Mutex();
-
         private bool close = false;
+
+        private IHandle handle;
 
         /// <summary>
         /// 业务处理
         /// </summary>
-        private IHandle handle;
+        public IHandle Handle {
+            set
+            {
+                handle = value;
+                new Thread(NotifyHandle).Start();
+            }
+        }
 
         public UserToken(Server server)
         {
@@ -34,15 +40,21 @@ namespace Server
         {
             do
             {
-                mutex.WaitOne();
-                handle?.Receive(this, m_buffer);
+                lock (this)
+                {
+                    Monitor.Wait(this);
+                    handle?.Receive(this, m_buffer);
+                }
             } while (!close);
         }
 
         public void Receive(byte[] buffer, int offset, int count)
         {
-            m_buffer.WriteBytes(buffer, offset, count);
-            mutex.ReleaseMutex();
+            lock (this)
+            {
+                m_buffer.WriteBytes(buffer, offset, count);
+                Monitor.PulseAll(this);
+            }
         }
 
         public void Send(byte[] buffer)
@@ -55,6 +67,7 @@ namespace Server
         /// </summary>
         public void Close()
         {
+            handle?.Close();
             close = true;
         }
     }

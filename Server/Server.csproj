@@ -44,7 +44,8 @@
   <ItemGroup>
     <Compile Include="BufferManager.cs" />
     <Compile Include="ByteBuffer.cs" />
-    <Compile Include="IHandle.cs" />
+    <Compile Include="Handle\DefaultHandle.cs" />
+    <Compile Include="Handle\IHandle.cs" />
     <Compile Include="Item.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

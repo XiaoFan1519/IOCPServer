@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-    interface IHandle
+    public interface IHandle
     {
         void Receive(UserToken token, ByteBuffer msg);
+
+        void Close();
     }
 }

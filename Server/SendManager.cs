@@ -17,17 +17,12 @@ namespace Server
         /// <summary>
         /// 待发送队列
         /// </summary>
-        private ConcurrentQueue<Item> items = new ConcurrentQueue<Item>();
+        private Queue<Item> items = new Queue<Item>();
 
         /// <summary>
         /// 判断当前是否需要结束
         /// </summary>
         private bool Close = false;
-
-        /// <summary>
-        /// 用于当发送队列为空时阻塞当前线程
-        /// </summary>
-        private Semaphore semaphore = new Semaphore(1, 1);
 
         SocketAsyncEventArgsPool m_WritePool;
 
@@ -72,8 +67,13 @@ namespace Server
                 Socket = socket,
                 buffer = buffer
             };
+
             items.Enqueue(item);
-            semaphore.Release();
+            lock(items)
+            {
+                // 接收到发送请求，唤醒等待中的线程
+                Monitor.PulseAll(items);
+            }
         }
 
         /// <summary>
@@ -83,24 +83,25 @@ namespace Server
         {
             do
             {
-                if (items.Count == 0)
+                lock (items)
                 {
-                    semaphore.WaitOne();
-                }
+                    // 当队列为空时，等待发送请求
+                    if (items.Count == 0)
+                    {
+                        Monitor.Wait(items);
+                    }
 
-                if (!items.TryDequeue(out Item result))
-                {
-                    continue;
-                }
+                    Item result = items.Dequeue();
 
-                Socket socket = result.Socket;
-
-                m_maxNumberClients.WaitOne();
-                SocketAsyncEventArgs writeEventArg = m_WritePool.Pop();
-                bool willRaiseEvent = socket.SendAsync(writeEventArg);
-                if (!willRaiseEvent)
-                {
-                    ProcessSend(writeEventArg);
+                    Socket socket = result.Socket;
+                    m_maxNumberClients.WaitOne();
+                    SocketAsyncEventArgs writeEventArg = m_WritePool.Pop();
+                    writeEventArg.SetBuffer(result.buffer, 0, result.buffer.Length);
+                    bool willRaiseEvent = socket.SendAsync(writeEventArg);
+                    if (!willRaiseEvent)
+                    {
+                        ProcessSend(writeEventArg);
+                    }
                 }
             } while (!Close);
         }

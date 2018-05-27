@@ -105,7 +105,7 @@ namespace Server
         {
             EnsureWritable(count);
             Buffer.BlockCopy(bytes, offset, buffer, writerIndex, count);
-            writerIndex += bytes.Length;
+            writerIndex += count;
             return this;
         }
 
