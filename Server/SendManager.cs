@@ -68,9 +68,9 @@ namespace Server
                 buffer = buffer
             };
 
-            items.Enqueue(item);
             lock(items)
             {
+                items.Enqueue(item);
                 // 接收到发送请求，唤醒等待中的线程
                 Monitor.PulseAll(items);
             }
