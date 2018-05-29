@@ -18,16 +18,22 @@ namespace Client
 
         static void Main(string[] args)
         {
-            string countStr = Console.ReadLine();
-            int count = Convert.ToInt32(countStr);
-            Semaphore semaphore = new Semaphore(0, count);
-
-            for (int i = 0; i < count; i++)
+            string countStr;
+            do
             {
-                new Thread(Send).Start(semaphore);
-            }
-            semaphore.Release(count);
-            Console.ReadKey();
+                Console.Write("请输入启动线程数:");
+                countStr = Console.ReadLine();
+                int count = Convert.ToInt32(countStr);
+                Semaphore semaphore = new Semaphore(0, count);
+
+                for (int i = 0; i < count; i++)
+                {
+                    new Thread(Send).Start(semaphore);
+                }
+                semaphore.Release(count);
+                Console.WriteLine("请等待线程执行结束");
+                Thread.Sleep((int)(count * 30));
+            } while (true);
         }
 
         static void Send(object semaphore)
@@ -35,6 +41,7 @@ namespace Client
             //设定服务器IP地址  
             IPAddress ip = IPAddress.Parse("127.0.0.1");
             Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            // 等待
             (semaphore as Semaphore).WaitOne();
             clientSocket.Connect(new IPEndPoint(ip, 9000));
             Stopwatch watch = new Stopwatch();

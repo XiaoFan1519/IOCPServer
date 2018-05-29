@@ -86,7 +86,7 @@ namespace Server
                 lock (items)
                 {
                     // 当队列为空时，等待发送请求
-                    if (items.Count == 0)
+                    while (items.Count == 0)
                     {
                         Monitor.Wait(items);
                     }
@@ -97,6 +97,7 @@ namespace Server
                     m_maxNumberClients.WaitOne();
                     SocketAsyncEventArgs writeEventArg = m_WritePool.Pop();
                     writeEventArg.SetBuffer(result.buffer, 0, result.buffer.Length);
+
                     bool willRaiseEvent = socket.SendAsync(writeEventArg);
                     if (!willRaiseEvent)
                     {

@@ -40,9 +40,13 @@ namespace Server
         {
             do
             {
-                lock (this)
+                lock (m_buffer)
                 {
-                    Monitor.Wait(this);
+                    while (m_buffer.ReadableBytes() == 0)
+                    {
+                        Monitor.Wait(m_buffer);
+                    }
+                    
                     handle?.Receive(this, m_buffer);
                 }
             } while (!close);
@@ -50,10 +54,10 @@ namespace Server
 
         public void Receive(byte[] buffer, int offset, int count)
         {
-            lock (this)
+            lock (m_buffer)
             {
                 m_buffer.WriteBytes(buffer, offset, count);
-                Monitor.PulseAll(this);
+                Monitor.PulseAll(m_buffer);
             }
         }
 

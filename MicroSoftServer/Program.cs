@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Server
+namespace MicroSoftServer
 {
     class Program
     {
@@ -14,8 +13,9 @@ namespace Server
         {
             IPAddress ipAddress = IPAddress.Parse("0.0.0.0");
             IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 9000);
-
-            new Server(10, 100).Init(null).Start(localEndPoint);
-        }    
+            Server server = new Server(1000, 10);
+            server.Init();
+            server.Start(localEndPoint);
+        }
     }
 }
