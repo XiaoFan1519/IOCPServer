@@ -27,8 +27,11 @@ namespace Server
             set
             {
                 handle = value;
-                thread = new Thread(NotifyHandle);
-                thread.Start();
+                if (null == thread)
+                {
+                    thread = new Thread(NotifyHandle);
+                    thread.Start();
+                }
             }
         }
 
