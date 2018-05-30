@@ -140,7 +140,6 @@ namespace Server
                 acceptEventArg.AcceptSocket = null;
             }
 
-            m_maxNumberAcceptedClients.WaitOne();
             bool willRaiseEvent = listenSocket.AcceptAsync(acceptEventArg);
             if (!willRaiseEvent)
             {
@@ -164,6 +163,7 @@ namespace Server
 
             // Get the socket for the accepted client connection and put it into the 
             //ReadEventArg object user token
+            m_maxNumberAcceptedClients.WaitOne();
             SocketAsyncEventArgs readEventArgs = m_readWritePool.Pop();
             UserToken token = new UserToken(this)
             {
@@ -250,11 +250,11 @@ namespace Server
 
             // decrement the counter keeping track of the total number of clients connected to the server
             Interlocked.Decrement(ref m_numConnectedSockets);
-            m_maxNumberAcceptedClients.Release();
             Console.WriteLine("A client has been disconnected from the server. There are {0} clients connected to the server", m_numConnectedSockets);
 
             // Free the SocketAsyncEventArg so they can be reused by another client
             m_readWritePool.Push(e);
+            m_maxNumberAcceptedClients.Release();
         }
 
         /// <summary>
