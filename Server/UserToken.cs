@@ -16,9 +16,9 @@ namespace Server
 
         private ByteBuffer m_buffer = new ByteBuffer();
 
-        private bool close = false;
-
         private IHandle handle;
+
+        private Thread thread;
 
         /// <summary>
         /// 业务处理
@@ -27,7 +27,8 @@ namespace Server
             set
             {
                 handle = value;
-                new Thread(NotifyHandle).Start();
+                thread = new Thread(NotifyHandle);
+                thread.Start();
             }
         }
 
@@ -49,7 +50,7 @@ namespace Server
                     
                     handle?.Receive(this, m_buffer);
                 }
-            } while (!close);
+            } while (true);
         }
 
         public void Receive(byte[] buffer, int offset, int count)
@@ -72,7 +73,7 @@ namespace Server
         public void Close()
         {
             handle?.Close();
-            close = true;
+            thread?.Abort();
         }
     }
 }
