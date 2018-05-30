@@ -38,11 +38,12 @@ namespace Client
 
         static void Send(object semaphore)
         {
-            //设定服务器IP地址  
-            IPAddress ip = IPAddress.Parse("127.0.0.1");
-            Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             // 等待
             (semaphore as Semaphore).WaitOne();
+
+            //设定服务器IP地址
+            IPAddress ip = IPAddress.Parse("127.0.0.1");
+            Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             clientSocket.Connect(new IPEndPoint(ip, 9000));
             Stopwatch watch = new Stopwatch();
             watch.Start();

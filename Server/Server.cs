@@ -25,11 +25,6 @@ namespace Server
         Semaphore m_maxNumberAcceptedClients;
 
         /// <summary>
-        /// 发送队列管理
-        /// </summary>
-        SendManager m_sendManager;
-
-        /// <summary>
         /// 获取业务处理类
         /// </summary>
         /// <returns></returns>
@@ -56,7 +51,6 @@ namespace Server
 
             m_readWritePool = new SocketAsyncEventArgsPool(numConnections);
             m_maxNumberAcceptedClients = new Semaphore(numConnections, numConnections);
-            m_sendManager = new SendManager(numConnections);
         }
 
         // Initializes the server by preallocating reusable buffers and 
@@ -73,19 +67,19 @@ namespace Server
             m_bufferManager.InitBuffer();
 
             // preallocate pool of SocketAsyncEventArgs objects
-            SocketAsyncEventArgs readEventArg;
+            SocketAsyncEventArgs readWriteEventArg;
 
             for (int i = 0; i < m_numConnections; i++)
             {
                 //Pre-allocate a set of reusable SocketAsyncEventArgs
-                readEventArg = new SocketAsyncEventArgs();
-                readEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);
+                readWriteEventArg = new SocketAsyncEventArgs();
+                readWriteEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);
 
                 // assign a byte buffer from the buffer pool to the SocketAsyncEventArg object
-                m_bufferManager.SetBuffer(readEventArg);
+                m_bufferManager.SetBuffer(readWriteEventArg);
 
                 // add SocketAsyncEventArg to the pool
-                m_readWritePool.Push(readEventArg);
+                m_readWritePool.Push(readWriteEventArg);
             }
             return this;
         }
@@ -101,7 +95,7 @@ namespace Server
             listenSocket = new Socket(localEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             listenSocket.Bind(localEndPoint);
             // start the server with a listen backlog of 100 connections
-            listenSocket.Listen(6000);
+            listenSocket.Listen(100);
 
             // post accepts on the listening socket
             StartAccept(null);
@@ -196,6 +190,9 @@ namespace Server
                 case SocketAsyncOperation.Receive:
                     ProcessReceive(e);
                     break;
+                case SocketAsyncOperation.Send:
+                    ProcessSend(e);
+                    break;
                 default:
                     throw new ArgumentException("The last operation completed on the socket was not a receive");
             }
@@ -228,6 +225,28 @@ namespace Server
             if (!willRaiseEvent)
             {
                 ProcessReceive(e);
+            }
+        }
+
+        // This method is invoked when an asynchronous send operation completes.  
+        // The method issues another receive on the socket to read any additional 
+        // data sent from the client
+        //
+        // <param name="e"></param>
+        private void ProcessSend(SocketAsyncEventArgs e)
+        {
+            // 还原缓存
+            BufferItem item = e.UserToken as BufferItem;
+            e.SetBuffer(item.Buffer, item.Offset, item.Count);
+
+            if (e.SocketError == SocketError.Success)
+            {
+                m_readWritePool.Push(e);
+                m_maxNumberAcceptedClients.Release();
+            }
+            else
+            {
+                CloseClientSocket(e);
             }
         }
 
@@ -264,7 +283,24 @@ namespace Server
         /// <param name="buffer"></param>
         public void Send(Socket socket, byte[] buffer)
         {
-            m_sendManager.Send(socket, buffer);
+            m_maxNumberAcceptedClients.WaitOne();
+            SocketAsyncEventArgs writerEventArgs = m_readWritePool.Pop();
+            // 暂存缓存信息
+            BufferItem item = new BufferItem()
+            {
+                Buffer = writerEventArgs.Buffer,
+                Offset = writerEventArgs.Offset,
+                Count = writerEventArgs.Count
+            };
+            writerEventArgs.UserToken = item;
+            // 放置待发送的信息
+            writerEventArgs.SetBuffer(buffer, 0, buffer.Length);
+
+            bool willRaiseEvent = socket.SendAsync(writerEventArgs);
+            if (!willRaiseEvent)
+            {
+                ProcessSend(writerEventArgs);
+            }
         }
     }
 }

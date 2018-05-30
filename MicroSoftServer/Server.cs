@@ -84,7 +84,7 @@ namespace MicroSoftServer
             listenSocket = new Socket(localEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             listenSocket.Bind(localEndPoint);
             // start the server with a listen backlog of 100 connections
-            listenSocket.Listen(6000);
+            listenSocket.Listen(100);
 
             // post accepts on the listening socket
             StartAccept(null);

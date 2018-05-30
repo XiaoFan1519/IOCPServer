@@ -8,18 +8,14 @@ using System.Threading.Tasks;
 namespace Server
 {
     /// <summary>
-    /// 待发送的数据
+    /// 缓存信息
     /// </summary>
-    class Item
+    class BufferItem
     {
-        /// <summary>
-        /// 待发送的Socket
-        /// </summary>
-        public Socket Socket;
+        public byte[] Buffer;
 
-        /// <summary>
-        /// 待发送的数据
-        /// </summary>
-        public byte[] buffer;
+        public int Offset;
+
+        public int Count;
     }
 }
