@@ -74,7 +74,10 @@ namespace Server
                 //Pre-allocate a set of reusable SocketAsyncEventArgs
                 readWriteEventArg = new SocketAsyncEventArgs();
                 readWriteEventArg.Completed += new EventHandler<SocketAsyncEventArgs>(IO_Completed);
-
+                // 初始化业务处理类
+                IHandle handle = getHandleFn?.Invoke();
+                readWriteEventArg.UserToken = new UserToken(this, handle ?? new DefaultHandle());
+                
                 // assign a byte buffer from the buffer pool to the SocketAsyncEventArg object
                 m_bufferManager.SetBuffer(readWriteEventArg);
 
@@ -155,18 +158,12 @@ namespace Server
             Console.WriteLine("Client connection accepted. There are {0} clients connected to the server",
                 m_numConnectedSockets);
 
-            // Get the socket for the accepted client connection and put it into the 
+            // Get the socket for the accepted cli00ent connection and put it into the 
             //ReadEventArg object user token
             m_maxNumberAcceptedClients.WaitOne();
             SocketAsyncEventArgs readEventArgs = m_readWritePool.Pop();
-            UserToken token = new UserToken(this)
-            {
-                Socket = e.AcceptSocket
-            };
-            readEventArgs.UserToken = token;
-            // 初始化业务处理类
-            IHandle handle = getHandleFn?.Invoke();
-            token.Handle = handle ?? new DefaultHandle();
+            UserToken token = readEventArgs.UserToken as UserToken;
+            token.Socket = e.AcceptSocket;
 
             // As soon as the client is connected, post a receive to the connection
             bool willRaiseEvent = e.AcceptSocket.ReceiveAsync(readEventArgs);
@@ -238,6 +235,7 @@ namespace Server
             // 还原缓存
             BufferItem item = e.UserToken as BufferItem;
             e.SetBuffer(item.Buffer, item.Offset, item.Count);
+            e.UserToken = item.UserToken;
 
             if (e.SocketError == SocketError.Success)
             {
@@ -290,7 +288,8 @@ namespace Server
             {
                 Buffer = writerEventArgs.Buffer,
                 Offset = writerEventArgs.Offset,
-                Count = writerEventArgs.Count
+                Count = writerEventArgs.Count,
+                UserToken = writerEventArgs.UserToken
             };
             writerEventArgs.UserToken = item;
             // 放置待发送的信息

@@ -18,51 +18,16 @@ namespace Server
 
         private IHandle handle;
 
-        private Thread thread;
-
-        /// <summary>
-        /// 业务处理
-        /// </summary>
-        public IHandle Handle {
-            set
-            {
-                handle = value;
-                if (null == thread)
-                {
-                    thread = new Thread(NotifyHandle);
-                    thread.Start();
-                }
-            }
-        }
-
-        public UserToken(Server server)
+        public UserToken(Server server, IHandle handle)
         {
             this.server = server;
-        }
-
-        private void NotifyHandle()
-        {
-            do
-            {
-                lock (m_buffer)
-                {
-                    while (m_buffer.ReadableBytes() == 0)
-                    {
-                        Monitor.Wait(m_buffer);
-                    }
-                    
-                    handle?.Receive(this, m_buffer);
-                }
-            } while (true);
+            this.handle = handle;
         }
 
         public void Receive(byte[] buffer, int offset, int count)
         {
-            lock (m_buffer)
-            {
-                m_buffer.WriteBytes(buffer, offset, count);
-                Monitor.PulseAll(m_buffer);
-            }
+            m_buffer.WriteBytes(buffer, offset, count);
+            handle?.Receive(this, m_buffer);
         }
 
         public void Send(byte[] buffer)
@@ -76,7 +41,6 @@ namespace Server
         public void Close()
         {
             handle?.Close();
-            thread?.Abort();
         }
     }
 }

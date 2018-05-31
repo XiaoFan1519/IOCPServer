@@ -46,7 +46,7 @@
     <Compile Include="ByteBuffer.cs" />
     <Compile Include="Handle\DefaultHandle.cs" />
     <Compile Include="Handle\IHandle.cs" />
-    <Compile Include="Item.cs" />
+    <Compile Include="BufferItem.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Server.cs" />

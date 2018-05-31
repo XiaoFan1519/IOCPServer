@@ -17,5 +17,7 @@ namespace Server
         public int Offset;
 
         public int Count;
+
+        public Object UserToken;
     }
 }
