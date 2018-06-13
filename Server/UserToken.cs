@@ -10,7 +10,7 @@ namespace Server
 {
     public class UserToken
     {
-        Socket Socket;
+        public Socket Socket;
 
         private Server server;
 
@@ -24,7 +24,7 @@ namespace Server
             this.handle = handle;
         }
 
-        void Receive(byte[] buffer, int offset, int count)
+        public void Receive(byte[] buffer, int offset, int count)
         {
             m_buffer.WriteBytes(buffer, offset, count);
             handle?.Receive(this, m_buffer);
@@ -38,7 +38,7 @@ namespace Server
         /// <summary>
         /// 停止线程
         /// </summary>
-        void Close()
+        public void Close()
         {
             handle?.Close();
         }
