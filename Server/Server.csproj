@@ -45,6 +45,7 @@
     <Compile Include="BufferManager.cs" />
     <Compile Include="ByteBuffer.cs" />
     <Compile Include="Handle\DefaultHandle.cs" />
+    <Compile Include="Handle\HttpProxy.cs" />
     <Compile Include="Handle\IHandle.cs" />
     <Compile Include="BufferItem.cs" />
     <Compile Include="Program.cs" />
