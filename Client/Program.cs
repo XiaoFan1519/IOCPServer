@@ -14,8 +14,6 @@ namespace Client
     class Program
     {
 
-        static ConcurrentBag<long> cost = new ConcurrentBag<long>();
-
         static void Main(string[] args)
         {
             string countStr;
@@ -24,22 +22,37 @@ namespace Client
                 Console.Write("请输入启动线程数:");
                 countStr = Console.ReadLine();
                 int count = Convert.ToInt32(countStr);
-                Semaphore semaphore = new Semaphore(0, count);
+                Semaphore task = new Semaphore(0, count);
+                Semaphore wait = new Semaphore(0, count);
 
                 for (int i = 0; i < count; i++)
                 {
-                    new Thread(Send).Start(semaphore);
+                    ManualResetEvent @event = new ManualResetEvent(false);
+                    new Thread(Send).Start(new Tuple<Semaphore, Semaphore>(task, wait));
                 }
-                semaphore.Release(count);
+                task.Release(count);
                 Console.WriteLine("请等待线程执行结束");
-                Thread.Sleep((int)(count * 30));
+                WaitAll(wait, count);
             } while (true);
         }
 
-        static void Send(object semaphore)
+        static void WaitAll(Semaphore wait, int count)
         {
+            int time = 0;
+            do
+            {
+                wait.WaitOne();
+                time++;
+            } while (time < count);
+        }
+
+        static void Send(object param)
+        {
+            var p = param as Tuple<Semaphore, Semaphore>;
+            Semaphore task = p.Item1;
+            Semaphore wait = p.Item2;
             // 等待
-            (semaphore as Semaphore).WaitOne();
+            task.WaitOne();
 
             //设定服务器IP地址
             IPAddress ip = IPAddress.Parse("127.0.0.1");
@@ -52,15 +65,19 @@ namespace Client
             buff = new byte[10];
 
             int receiveCount = 0;
+            byte[] tmp = new byte[10];
             do
             {
-                receiveCount += clientSocket.Receive(buff);
+                receiveCount += clientSocket.Receive(tmp);
             } while (receiveCount < 10);
             watch.Stop();
-            Console.WriteLine(watch.ElapsedMilliseconds);
-            cost.Add(watch.ElapsedMilliseconds);
+            Console.WriteLine("{0}:{1}", watch.ElapsedMilliseconds,
+                Encoding.Default.GetString(tmp));
             clientSocket.Shutdown(SocketShutdown.Both);
             clientSocket.Close();
+
+            // 不考虑异常情况
+            wait.Release();
         }
     }
 }
