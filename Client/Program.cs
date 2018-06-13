@@ -32,16 +32,6 @@ namespace Client
             } while (true);
         }
 
-        static void WaitAll(Semaphore wait, int count)
-        {
-            int time = 0;
-            do
-            {
-                wait.WaitOne();
-                time++;
-            } while (time < count);
-        }
-
         static void Send(object param)
         {
             var p = param as Tuple<Semaphore, Semaphore>;
@@ -74,6 +64,16 @@ namespace Client
 
             // 不考虑异常情况
             wait.Release();
+        }
+
+        static void WaitAll(Semaphore wait, int count)
+        {
+            int time = 0;
+            do
+            {
+                wait.WaitOne();
+                time++;
+            } while (time < count);
         }
     }
 }
