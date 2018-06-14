@@ -23,7 +23,6 @@ namespace Client
 
                 for (int i = 0; i < count; i++)
                 {
-                    ManualResetEvent @event = new ManualResetEvent(false);
                     new Thread(Send).Start(new Tuple<Semaphore, Semaphore>(task, wait));
                 }
                 task.Release(count);
