@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace IOCP.Handle
 {
@@ -23,6 +24,20 @@ namespace IOCP.Handle
                 return;
             }
             
+            for (; offset < msg.ReadableBytes(); offset++ )
+            {
+                byte b = msg.Peek(offset);
+                if (b == terminator[match])
+                {
+                    match++;
+                    if (match == terminator.Length)
+                    {
+                        Console.WriteLine("HTTP消息头接收完毕");
+                        byte[] bytes = msg.ReadBytes(offset + 1);
+                        Console.WriteLine("HTTP消息头接收完毕");
+                    }
+                }
+            }
         }
 
         public void Close()
