@@ -56,7 +56,7 @@ namespace Server.Tests
         {
             ByteBuffer byteBuffer = new ByteBuffer(4);
             Assert.AreEqual(4, byteBuffer.WritableBytes());
-            byteBuffer.WriteInt(1);
+            byteBuffer.WriteBytes(new byte[4], 0, 4);
             Assert.AreEqual(0, byteBuffer.WritableBytes());
             Assert.AreEqual(4, byteBuffer.WriterIndex);
         }
@@ -132,6 +132,21 @@ namespace Server.Tests
             ByteBuffer byteBuffer = new ByteBuffer(4);
             byteBuffer.WriteInt(2147483647);
             Assert.AreEqual(2147483647, byteBuffer.ReadInt());
+        }
+
+        [TestMethod]
+        public void PeekTest()
+        {
+            ByteBuffer buffer = new ByteBuffer(100);
+            for(byte i = 0; i < 100; i++)
+            {
+                buffer.WriteByte(i);
+            }
+
+            for (byte i = 0; i < 100; i++)
+            {
+                Assert.AreEqual(i, buffer.Peek(i));
+            }
         }
     }
 }

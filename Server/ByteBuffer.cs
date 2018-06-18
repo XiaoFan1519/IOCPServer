@@ -57,7 +57,7 @@ namespace IOCP
         }
 
         /// <summary>
-        /// 获取当前可以写如的字节数
+        /// 获取当前可以写入的字节数
         /// </summary>
         /// <returns></returns>
         public int WritableBytes()
@@ -92,6 +92,21 @@ namespace IOCP
             Buffer.BlockCopy(this.buffer, 0, buffer, 0, writerIndex);
             capacity = newLength;
             this.buffer = buffer;
+        }
+
+        /// <summary>
+        /// 将指定数量的字节数组写入ByteBuffer中
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public ByteBuffer WriteByte(byte b)
+        {
+            EnsureWritable(1);
+            buffer[writerIndex] = b;
+            writerIndex += 1;
+            return this;
         }
 
         /// <summary>
@@ -158,7 +173,23 @@ namespace IOCP
         }
 
         /// <summary>
-        /// 在不影响readerIndex的情况下获取字节
+        /// 在不影响readerIndex的情况下获取指定位置的字节
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public byte Peek(int index)
+        {
+            // 越界检测
+            if (IsOutOfBounds(index, 1, capacity))
+            {
+                throw new ArgumentException(string.Format("index:{0} 无效", index));
+            }
+
+            return buffer[index];
+        }
+
+        /// <summary>
+        /// 在不影响readerIndex的情况下获取字节数组
         /// </summary>
         /// <param name="index">起始位置</param>
         /// <param name="count">获取数量</param>
