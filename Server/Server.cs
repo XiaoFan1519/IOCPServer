@@ -154,16 +154,17 @@ namespace IOCP
 
         private void ProcessAccept(SocketAsyncEventArgs e)
         {
-            Interlocked.Increment(ref m_numConnectedSockets);
-            Console.WriteLine("Client connection accepted. There are {0} clients connected to the server",
-                m_numConnectedSockets);
-
             // Get the socket for the accepted cli00ent connection and put it into the 
             //ReadEventArg object user token
             m_maxNumberAcceptedClients.WaitOne();
+
             SocketAsyncEventArgs readEventArgs = m_readWritePool.Pop();
             UserToken token = readEventArgs.UserToken as UserToken;
             token.Socket = e.AcceptSocket;
+
+            Interlocked.Increment(ref m_numConnectedSockets);
+            Console.WriteLine("Client connection accepted. There are {0} clients connected to the server",
+                m_numConnectedSockets);
 
             // As soon as the client is connected, post a receive to the connection
             bool willRaiseEvent = e.AcceptSocket.ReceiveAsync(readEventArgs);
@@ -241,11 +242,10 @@ namespace IOCP
             {
                 m_readWritePool.Push(e);
                 m_maxNumberAcceptedClients.Release();
+                return;
             }
-            else
-            {
-                CloseClientSocket(e);
-            }
+
+            Console.WriteLine("发送失败 {0}", e.SocketError);
         }
 
         private void CloseClientSocket(SocketAsyncEventArgs e)
@@ -256,14 +256,17 @@ namespace IOCP
             try
             {
                 token.Socket.Shutdown(SocketShutdown.Send);
+                token.Socket.Close();
             }
             // throws if client process has already closed
-            catch (Exception) { }
+            catch (Exception ex)
+            {
+                Console.WriteLine("{0}:{1}", ex.Message, ex.StackTrace);
+            }
             finally
             {
                 token.Close();
             }
-            token.Socket.Close();
 
             // decrement the counter keeping track of the total number of clients connected to the server
             Interlocked.Decrement(ref m_numConnectedSockets);
