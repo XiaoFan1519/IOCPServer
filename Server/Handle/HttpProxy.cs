@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Server.Handle
+namespace IOCP.Handle
 {
     public class HttpProxyHandle : IHandle
     {
