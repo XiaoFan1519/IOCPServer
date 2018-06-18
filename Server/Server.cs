@@ -98,7 +98,7 @@ namespace Server
             listenSocket = new Socket(localEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             listenSocket.Bind(localEndPoint);
             // start the server with a listen backlog of 100 connections
-            listenSocket.Listen(100);
+            listenSocket.Listen(int.MaxValue);
 
             // post accepts on the listening socket
             StartAccept(null);

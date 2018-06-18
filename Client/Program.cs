@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -9,6 +13,7 @@ namespace Client
 {
     class Program
     {
+        static ConcurrentBag<long> list = new ConcurrentBag<long>();
 
         static void Main(string[] args)
         {
@@ -18,17 +23,23 @@ namespace Client
                 Console.Write("请输入启动线程数:");
                 countStr = Console.ReadLine();
                 int count = Convert.ToInt32(countStr);
-                Semaphore task = new Semaphore(0, count);
-                Semaphore wait = new Semaphore(0, count);
-
-                for (int i = 0; i < count; i++)
+                int times = 0;
+                do
                 {
-                    ManualResetEvent @event = new ManualResetEvent(false);
-                    new Thread(Send).Start(new Tuple<Semaphore, Semaphore>(task, wait));
-                }
-                task.Release(count);
-                Console.WriteLine("请等待线程执行结束");
-                WaitAll(wait, count);
+                    Semaphore task = new Semaphore(0, count);
+                    Semaphore wait = new Semaphore(0, count);
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        ManualResetEvent @event = new ManualResetEvent(false);
+                        new Thread(Send).Start(new Tuple<Semaphore, Semaphore>(task, wait));
+                    }
+                    task.Release(count);
+                    Console.WriteLine("请等待线程执行结束");
+                    WaitAll(wait, count);
+                    Console.WriteLine("平均耗时:{0}", list.Average());
+                } while (++times < 100);
+                Console.WriteLine("总平均耗时:{0}", list.Average());
             } while (true);
         }
 
@@ -57,11 +68,12 @@ namespace Client
                 receiveCount += clientSocket.Receive(tmp);
             } while (receiveCount < 10);
             watch.Stop();
-            Console.WriteLine("{0}:{1}", watch.ElapsedMilliseconds,
-                Encoding.Default.GetString(tmp));
+            //Console.WriteLine("{0}:{1}", watch.ElapsedMilliseconds,
+            //    Encoding.Default.GetString(tmp));
             clientSocket.Shutdown(SocketShutdown.Both);
             clientSocket.Close();
-
+            // 记录运行耗时
+            list.Add(watch.ElapsedMilliseconds);
             // 不考虑异常情况
             wait.Release();
         }
