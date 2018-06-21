@@ -34,7 +34,8 @@ namespace IOCP.Handle
                     {
                         Console.WriteLine("HTTP消息头接收完毕");
                         byte[] bytes = msg.ReadBytes(offset + 1);
-                        Console.WriteLine("HTTP消息头接收完毕");
+                        string aaa = Encoding.Default.GetString(bytes);
+                        Console.WriteLine("HTTP消息头接收完毕: {0}", aaa);
                     }
                 }
             }
